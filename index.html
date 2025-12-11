@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pottuvil DSD - Complete Guide to Sri Lanka's East Coast</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root { --primary-blue: #007ac2; --dark-bg: #1a2a3a; --light-bg: #f8f9fa; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #fff; }
+  .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  .site-header {
+    background-color: var(--dark-bg); position: sticky; top: 0; z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .header-container { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
+  .brand { font-size: 1.8rem; font-weight: 700; color: white; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .brand i { color: #4dabf7; }
+  .main-nav { display: flex; gap: 25px; }
+  .main-nav a { color: #e9ecef; text-decoration: none; font-weight: 500; padding: 8px 0; position: relative; transition: color 0.3s; }
+  .main-nav a:hover, .main-nav a.active { color: #4dabf7; }
+  .main-nav a::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background-color: #4dabf7; transition: width 0.3s; }
+  .main-nav a:hover::after { width: 100%; }
+  .nav-toggle { display: none; background: none; border: none; font-size: 1.5rem; color: white; cursor: pointer; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(rgba(26, 42, 58, 0.7), rgba(26, 42, 58, 0.8)),
+                url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80') center/cover no-repeat;
+    color: white; padding: 100px 20px; text-align: center;
+  }
+  .hero h1 { font-size: 3.2rem; margin-bottom: 15px; }
+  .hero p { font-size: 1.3rem; max-width: 700px; margin: 0 auto 30px; opacity: 0.9; }
+  .hero .btn { display: inline-block; background: var(--primary-blue); color: white; padding: 14px 32px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0, 122, 194, 0.4); transition: transform 0.3s, box-shadow 0.3s; }
+  .hero .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 122, 194, 0.6); }
+
+  /* Map Section */
+  .map-section { padding: 70px 20px; background-color: var(--light-bg); }
+  .section-title { text-align: center; font-size: 2.5rem; color: var(--dark-bg); margin-bottom: 15px; position: relative; padding-bottom: 15px; }
+  .section-title::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 80px; height: 4px; background: var(--primary-blue); border-radius: 2px; }
+  .section-subtitle { text-align: center; color: #666; font-size: 1.1rem; max-width: 800px; margin: 0 auto 40px; }
+  .filter-controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 30px; }
+  .filter-btn { padding: 10px 22px; background: white; border: 2px solid #ddd; border-radius: 50px; cursor: pointer; font-weight: 600; color: #555; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+  .filter-btn:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+  .filter-btn.active { background-color: var(--primary-blue); color: white; border-color: var(--primary-blue); }
+  #map { height: 550px; width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #ddd; }
+
+  /* Highlights Gallery */
+  .highlights-section { padding: 80px 20px; }
+  .highlights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; margin-top: 40px; }
+  .place-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.08); transition: transform 0.4s, box-shadow 0.4s; cursor: pointer; }
+  .place-card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+  .card-img-container { height: 220px; width: 100%; overflow: hidden; }
+  .card-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s; display: block; }
+  .place-card:hover .card-img { transform: scale(1.05); }
+  .card-body { padding: 22px; }
+  .card-body h3 { font-size: 1.25rem; margin-bottom: 8px; color: var(--dark-bg); }
+  .card-body p { color: #666; margin-bottom: 8px; font-size: 0.95rem; }
+  .card-tag { display: inline-block; background: #e7f5ff; color: var(--primary-blue); padding: 5px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; }
+
+  /* Itinerary */
+  .itinerary-section { padding: 80px 20px; background-color: #f0f8ff; }
+  .itinerary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px; }
+  .day-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.05); border-left: 5px solid var(--primary-blue); }
+  .day-number { font-size: 3rem; font-weight: 800; color: #e7f5ff; line-height: 1; margin-bottom: 15px; }
+
+  /* Footer */
+  .site-footer { background-color: var(--dark-bg); color: #ccc; padding: 60px 20px 30px; }
+  .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
+  .footer-col h4 { color: white; margin-bottom: 20px; font-size: 1.3rem; }
+  .footer-links a { display: block; color: #aaa; text-decoration: none; margin-bottom: 10px; transition: color 0.3s; }
+  .footer-links a:hover { color: #4dabf7; padding-left: 5px; }
+  .copyright { text-align: center; padding-top: 30px; border-top: 1px solid #2c3e50; color: #aaa; font-size: 0.9rem; }
+
+  /* Lightbox modal for images */
+  .modal {
+    display: none;
+    position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal.show { display: flex; }
+  .modal img { max-width: 100%; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+  .modal .close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 28px; cursor: pointer; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .nav-toggle { display: block; }
+    .main-nav { position: fixed; top: 70px; left: 0; width: 100%; background: var(--dark-bg); flex-direction: column; padding: 20px; gap: 0; display: none; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+    .main-nav.show { display: flex; }
+    .main-nav a { padding: 15px 0; border-bottom: 1px solid #2c3e50; }
+    .hero h1 { font-size: 2.5rem; }
+    .hero p { font-size: 1.1rem; }
+    .section-title { font-size: 2rem; }
+    #map { height: 420px; }
+  }
+</style>
+
+    <style>
+        /* Ultra-Modern Cyber Gradient Footer */
+        .copyright {
+            width: 100%;
+            max-width: 1250px;
+            margin: 50px auto 0 auto;
+            padding: 35px 40px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            
+            /* Futuristic Gradient */
+            background: linear-gradient(135deg, 
+                rgba(10, 12, 28, 0.95) 0%,
+                rgba(25, 20, 65, 0.92) 30%,
+                rgba(40, 30, 90, 0.9) 70%,
+                rgba(70, 20, 100, 0.88) 100%);
+            
+            /* Glass Morphism Effect */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            
+            /* Advanced Border Effects */
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 -2px 4px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+                0 0 40px rgba(138, 43, 226, 0.15);
+            
+            /* Smooth Transitions */
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Gradient Border Effect */
+        .copyright::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent,
+                #8a2be2,
+                #00ffff,
+                #ff0080,
+                #8a2be2,
+                transparent);
+            animation: borderGlow 4s linear infinite;
+            background-size: 200% 100%;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Hover Effects */
+        .copyright:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.6),
+                0 0 60px rgba(138, 43, 226, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, 
+                rgba(15, 18, 35, 0.98) 0%,
+                rgba(30, 25, 75, 0.95) 30%,
+                rgba(45, 35, 105, 0.93) 70%,
+                rgba(75, 25, 115, 0.9) 100%);
+        }
+
+        /* Neon Year Highlight */
+        .copyright span {
+            font-weight: 800;
+            background: linear-gradient(90deg, #00ffff, #ff0080);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 15px rgba(255, 0, 128, 0.4);
+            letter-spacing: 1px;
+            animation: neonPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes neonPulse {
+            0% { 
+                text-shadow: 0 0 15px rgba(255, 0, 128, 0.4),
+                           0 0 20px rgba(0, 255, 255, 0.2);
+            }
+            100% { 
+                text-shadow: 0 0 20px rgba(255, 0, 128, 0.6),
+                           0 0 30px rgba(0, 255, 255, 0.4),
+                           0 0 40px rgba(255, 0, 128, 0.3);
+            }
+        }
+
+        /* Designer Text - Futuristic Style */
+        .designer {
+            display: block;
+            margin-top: 16px;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0.5px;
+            transition: all 0.4s ease;
+            position: relative;
+            padding-bottom: 4px;
+        }
+
+        .designer::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            transition: width 0.4s ease;
+        }
+
+        .designer:hover {
+            color: #ffffff;
+            letter-spacing: 1px;
+            transform: translateY(-2px);
+        }
+
+        .designer:hover::after {
+            width: 100%;
+        }
+
+        .designer strong {
+            font-weight: 700;
+            background: linear-gradient(90deg, #00ffff, #8a2be2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        /* Subtle Floating Particles Effect */
+        .copyright::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(
+                circle at 30% 30%,
+                rgba(138, 43, 226, 0.1) 0%,
+                transparent 50%),
+                radial-gradient(
+                circle at 70% 70%,
+                rgba(0, 255, 255, 0.1) 0%,
+                transparent 50%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .copyright:hover::after {
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .copyright {
+                padding: 25px 20px;
+                margin: 30px auto;
+                font-size: 16px;
+                border-radius: 20px;
+            }
+            
+            .designer {
+                font-size: 14px;
+                margin-top: 12px;
+            }
+        }
+    </style>
+
+
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-container">
+      <a href="#home" class="brand"><i class="fas fa-umbrella-beach"></i> Pottuvil Explorer</a>
+      <nav class="main-nav" id="mainNav">
+        <a href="#home" class="active">Home</a>
+        <a href="#mapSection">Interactive Map</a>
+        <a href="#highlights">All Places</a>
+        <a href="#itinerary">Itinerary</a>
+        <a href="#footer">Contact</a>
+      </nav>
+      <button class="nav-toggle" id="navToggle"><i class="fas fa-bars"></i></button>
+    </div>
+  </header>
+
+  <section class="hero" id="home">
+    <div class="container">
+      <h1>Complete Guide to Pottuvil Region</h1>
+      <p>Every beach, surf point, heritage site, and local experience mapped and documented for your journey.</p>
+      <a href="#mapSection" class="btn">Explore All Locations</a>
+    </div>
+  </section>
+
+  <section class="map-section" id="mapSection">
+    <div class="container">
+      <h2 class="section-title">Complete Interactive Map</h2>
+      <p class="section-subtitle">Filter by category to explore all tourist places in Pottuvil. Every marker has an image and details.</p>
+      <div class="filter-controls" id="filterControls"></div>
+      <div id="map"></div>
+      <div style="margin-top: 25px; text-align: center; color: #777; font-size: 0.9rem;">
+        <i class="fas fa-info-circle"></i> Click on any marker to see photos and details about that location. Click image for larger view.
+      </div>
+    </div>
+  </section>
+
+  <section class="highlights-section" id="highlights">
+    <div class="container">
+      <h2 class="section-title">Featured Places & Highlights</h2>
+      <p class="section-subtitle">All places from the dataset are shown below (no limit).</p>
+      <div class="highlights-grid" id="highlightsGrid"></div>
+    </div>
+  </section>
+
+  <section class="itinerary-section" id="itinerary">
+    <div class="container">
+      <h2 class="section-title">3-Day Exploration Itinerary</h2>
+      <p class="section-subtitle">A comprehensive plan to experience beaches, heritage, and local culture.</p>
+      <div class="itinerary-grid">
+        <div class="day-card">
+          <div class="day-number">01</div>
+          <h3>Day 1: Beaches & Surf Culture</h3>
+          <p><strong>Morning:</strong> Surf at Arugam Bay Main Point. Visit Baby Point for beginners.</p>
+          <p><strong>Afternoon:</strong> Explore Elephant Rock and Crocodile Rock. Relax at Peanut Farm Beach.</p>
+          <p><strong>Evening:</strong> Sunset at Main Point View Deck. Dinner at Arugam Bay Main Street.</p>
+        </div>
+        <div class="day-card">
+          <div class="day-number">02</div>
+          <h3>Day 2: Heritage & Nature</h3>
+          <p><strong>Morning:</strong> Visit Darampanawa Ruins, 3rd Mile Post Ruins, and Sengamuwa sites.</p>
+          <p><strong>Afternoon:</strong> Pottuvil Lagoon boat safari. Explore Ruhuna Mangrove Forest.</p>
+          <p><strong>Evening:</strong> Visit Pottuvil Central Mosque and St Francis Xavier Church.</p>
+        </div>
+        <div class="day-card">
+          <div class="day-number">03</div>
+          <h3>Day 3: Local Experiences</h3>
+          <p><strong>Morning:</strong> Pottuvil Local Market tour. Batik workshop visit.</p>
+          <p><strong>Afternoon:</strong> Urani Village tour. Paddy field tuk-tuk ride.</p>
+          <p><strong>Evening:</strong> Yoga session. Live music at Beach Bar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer" id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h4>Complete Pottuvil Guide</h4>
+          <p>Every location documented with images and details. The most comprehensive resource for Pottuvil tourism.</p>
+        </div>
+        <div>
+          <h4>Quick Links</h4>
+          <nav class="footer-links">
+            <a href="#mapSection">Full Interactive Map</a>
+            <a href="#highlights">Featured Places</a>
+            <a href="#itinerary">3-Day Itinerary</a>
+          </nav>
+        </div>
+        <div>
+          <h4>Contact & Updates</h4>
+          <p>For complete information and guided tours:</p>
+          <p>📧 guide@pottuvil.lk<br>📞 +94 77 123 4567</p>
+          <p>Pottuvil Divisional Secretariat, Sri Lanka</p>
+        </div>
+      </div>
+          <div class="copyright">
+            © <span id="currentYear"></span> Pottuvil Complete Guide. All locations mapped.
+            <span class="designer">Designed by <strong>MOHAMED ASFAN</strong></span>
+          </div>
+
+    </div>
+  </footer>
+
+  <!-- Image modal (lightbox) -->
+  <div id="imgModal" class="modal" aria-hidden="true">
+    <span class="close" id="modalClose"><i class="fas fa-times"></i></span>
+    <img id="modalImg" src="" alt="Large view">
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    document.getElementById('navToggle').addEventListener('click', function() {
+      document.getElementById('mainNav').classList.toggle('show');
+    });
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    // ============================================
+    // DATA (same places you provided)
+    // ============================================
+    var touristPlaces = [
+      // Beach & Surf Category (15 places)
+      {Name:"Arugam Bay Main Point", Category:"Beach & Surf", Type:"Surf Break", Lat:6.8398, Lon:81.8361, Desc:"World-famous advanced surf break", imgSrc:"https://images.unsplash.com/photo-1506929562872-bb421503ef21?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Arugam Bay Beach", Category:"Beach & Surf", Type:"Beach", Lat:6.8395, Lon:81.8350, Desc:"Crescent shaped main beach", imgSrc:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Baby Point", Category:"Beach & Surf", Type:"Surf Break", Lat:6.8412, Lon:81.8325, Desc:"Beginner surf spot", imgSrc: "https://media-cdn.tripadvisor.com/media/photo-s/1b/e6/b3/34/baby-point-and-main-point.jpg"},
+      {Name:"Pottuvil Point", Category:"Beach & Surf", Type:"Surf Break", Lat:6.8602, Lon:81.8230, Desc:"Less crowded right-hand wave", imgSrc:"https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Whiskey Point", Category:"Beach & Surf", Type:"Surf Break", Lat:6.9101, Lon:81.8200, Desc:"Popular beginner surf point", imgSrc:"https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Peanut Farm Beach", Category:"Beach & Surf", Type:"Beach", Lat:6.8830, Lon:81.8180, Desc:"Remote scenic beach", imgSrc:"https://images.unsplash.com/photo-1505142468610-359e7d316be0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Elephant Rock", Category:"Beach & Surf", Type:"Scenic Rock", Lat:6.8350, Lon:81.8280, Desc:"Sunset rock viewpoint", imgSrc:"https://images.unsplash.com/photo-1506260408121-e353d10b87c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Crocodile Rock", Category:"Beach & Surf", Type:"Scenic Rock", Lat:6.8321, Lon:81.8303, Desc:"Archaeological rock site", imgSrc: "https://lh3.googleusercontent.com/pw/ACtC-3eLghKi-oP9T4MBjAQQdiEGRzn03ugL4omV7xq-hAorVNRVtxS3E8ZZeTSor2FRqB-YhpUSYBFsDDjznFHwTwinT5MUk_Oewf8hlxQy-ZZAi3V63azt2UxIxwlrBi8fo6B6gGOkPEQ9lL1mdu-uvOgW=w532-h400-no?authuser=0"},
+      {Name:"Kottukal Beach", Category:"Beach", Type:"Beach", Lat:6.9620, Lon:81.8050, Desc:"Quiet stretched beach", imgSrc:"https://images.unsplash.com/photo-1519046904884-53103b34b206?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Black Beach", Category:"Beach", Type:"Beach", Lat:6.9550, Lon:81.8000, Desc:"Dark sand beach", imgSrc:"https://images.unsplash.com/photo-1473116763249-2faaef81ccda?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Nawalaru Bridge", Category:"Viewpoint", Type:"Bridge", Lat:6.8500, Lon:81.8300, Desc:"Lagoon and sea meeting point", imgSrc: "https://www.maga.lk/wp-content/uploads/2015/04/121-Siyambalanduwa%E2%80%93Po%E2%80%93Akk-Road-02.jpg"},
+      {Name:"Main Point View Deck", Category:"Experience", Type:"View Deck", Lat:6.8397, Lon:81.8365, Desc:"Surf viewing platform", imgSrc:"https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Arugam Bay Main Bridge", Category:"Infrastructure", Type:"Bridge", Lat:6.8408, Lon:81.8335, Desc:"Lagoon bridge point", imgSrc:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Peanut Farm Camping Area", Category:"Experience", Type:"Camping", Lat:6.8828, Lon:81.8182, Desc:"Camping beach area", imgSrc:"https://images.unsplash.com/photo-1504851149312-7a075b496cc7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Whiskey Point Sunrise", Category:"Experience", Type:"View Point", Lat:6.9105, Lon:81.8205, Desc:"Sunrise experience", imgSrc:"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+
+      // Heritage Category (12 places)
+      {Name:"Darampanawa Ruins", Category:"Heritage", Type:"Ruins", Lat:6.8800, Lon:81.7900, Desc:"Old dagoba ruins", imgSrc: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Fishing_in_pottuvil%2C_Sri_lanka.jpg/760px-Mapcarta.jpg"},
+      {Name:"3rd Mile Post Ruins", Category:"Heritage", Type:"Ruins", Lat:6.8900, Lon:81.7800, Desc:"Monastic complex remains", imgSrc: "https://i0.wp.com/amazinglanka.com/wp/wp-content/uploads/2025/11/tangalmandiya-01.jpg?fit=1200%2C675&ssl=1&resize=350%2C200"},
+      {Name:"Sengamuwa Ruins", Category:"Heritage", Type:"Archaeological Site", Lat:6.9200, Lon:81.7550, Desc:"Stone pillar ruins", imgSrc: "https://i0.wp.com/amazinglanka.com/wp/wp-content/uploads/2017/06/732.jpg?resize=768%2C304&ssl=1"},
+      {Name:"Sengamuwa Pansalgoda", Category:"Heritage", Type:"Temple Ruins", Lat:6.9230, Lon:81.7600, Desc:"Ancient temple site", imgSrc: "https://i0.wp.com/amazinglanka.com/wp/wp-content/uploads/2017/06/831.jpg?resize=768%2C341&ssl=1"},
+      {Name:"Paranagovipola Site", Category:"Heritage", Type:"Rock Carvings", Lat:6.9400, Lon:81.7700, Desc:"Temple ruins area", imgSrc:"https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Paranagovipola Inscription", Category:"Heritage", Type:"Inscription", Lat:6.9410, Lon:81.7710, Desc:"Pillar inscription", imgSrc:"https://images.unsplash.com/photo-1534008897995-27a23e859048?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Ethgala Ruins", Category:"Heritage", Type:"Ruins", Lat:6.9500, Lon:81.7400, Desc:"Ancient remains", imgSrc: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/SL_Kurunegala_asv2020-01_img05.jpg/250px-SL_Kurunegala_asv2020-01_img05.jpg"},
+      {Name:"Radella Site II", Category:"Heritage", Type:"Ruins", Lat:6.9650, Lon:81.7220, Desc:"Old building remains", imgSrc: "https://i0.wp.com/amazinglanka.com/wp/wp-content/uploads/2017/06/537.jpg?fit=1024%2C466&ssl=1"},
+      {Name:"Radella Reservoir Ruins", Category:"Heritage", Type:"Reservoir", Lat:6.9680, Lon:81.7230, Desc:"Ancient sluice", imgSrc: "https://i0.wp.com/amazinglanka.com/wp/wp-content/uploads/2017/06/017.jpg?resize=768%2C366&ssl=1"},
+      {Name:"Yalpotha Ancient Sluice", Category:"Heritage", Type:"Sluice", Lat:6.9700, Lon:81.7240, Desc:"Historic water structure", imgSrc: "https://i0.wp.com/amazinglanka.com/wp/wp-content/uploads/2017/06/ruins.jpg?resize=768%2C363&ssl=1"},
+      {Name:"Budupatuna Ruins", Category:"Heritage", Type:"Ruins", Lat:6.8500, Lon:81.8200, Desc:"Pillared hall remains", imgSrc: "https://www.lanka-excursions-holidays.com/uploads/4/0/2/1/40216937/pottuvil-dsc-0445-wide-1560_orig.jpg"},
+      {Name:"Pottuvil Grand Mosque", Category:"Heritage", Type:"Mosque", Lat:6.8660, Lon:81.8240, Desc:"Main mosque", imgSrc: "https://scontent.fcmb1-2.fna.fbcdn.net/v/t39.30808-6/471303806_122147368772343274_1652179568803206229_n.jpg?stp=dst-jpg_s590x590_tt6&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=jY4DXn_Ki_IQ7kNvwFKYAXq&_nc_oc=Adm_415hb92E7MNV7QmGyK38icJhHaiJh_ecSy8RUuCqN2DTQyg2awibtFk0hl247do&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&_nc_gid=cbquIwnO78qLwKuWuTm9LA&oh=00_Aflcsmett7F5nQ3W46mvQDCr108lKE-7A7smx_3NTgMwmA&oe=69404FA5"},
+      {Name:"St Francis Xavier Church", Category:"Heritage", Type:"Church", Lat:6.8700, Lon:81.8250, Desc:"Local catholic church", imgSrc: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnZcigsZZPv2zz-EVOOy_pFEPhWonT7ymfUw&s"},
+
+      // Nature & Waterbodies (8 places)
+      {Name:"Pottuvil Lagoon", Category:"Nature & Wildlife", Type:"Lagoon", Lat:6.8700, Lon:81.8000, Desc:"Mangrove and eco safari", imgSrc: "https://www.civitatis.com/f/sri-lanka/arugam-bay/galeria/big/elefantes-pontuvill.jpg"},
+      {Name:"Kunjan Odai Crocodile Point", Category:"Wildlife", Type:"Crocodile Spot", Lat:6.8800, Lon:81.8100, Desc:"Roadside crocodile area", imgSrc: "https://lh3.googleusercontent.com/pw/ACtC-3fF0VCQbOQB-ml6WbJvjoozO9iBJSavb4KHI6DAWSCP5cg1T6N922WJ3AXxrE7SxKzuPk25LVsC0hJlfFFLuuxDuziPpDBSLLu-mSwW-fp6tqGhnGxusA5SS7KhF6-ygnhzqkpdr0KbVbooHJs9mksP=w532-h400-no?authuser=0"},
+      {Name:"Sengamuwa Reservoir", Category:"Waterbody", Type:"Reservoir", Lat:6.9200, Lon:81.7600, Desc:"Wildlife water source", imgSrc:"https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Urani River", Category:"Waterbody", Type:"River", Lat:6.8650, Lon:81.7900, Desc:"Boat trip area", imgSrc:"https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Ruhuna Mangrove Forest", Category:"Nature", Type:"Mangrove", Lat:6.8750, Lon:81.8050, Desc:"Mangrove ecosystem", imgSrc:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Pottuvil Lagoon Boat Safari", Category:"Experience", Type:"Boat Safari", Lat:6.8720, Lon:81.8020, Desc:"Wildlife boat trip", imgSrc:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Elephant Rock Sunset", Category:"Experience", Type:"View Point", Lat:6.8355, Lon:81.8282, Desc:"Sunset experience", imgSrc:"https://images.unsplash.com/photo-1506260408121-e353d10b87c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Pottuvil Paddy Fields", Category:"Experience", Type:"Agriculture Scenic", Lat:6.8725, Lon:81.8005, Desc:"Scenic fields", imgSrc: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw29FGKzrtajk78tDcmZVnCxHv6zG7UyDEKg&s"},
+
+      // Local Experience Category (20+ places)
+      {Name:"Arugam Bay Main Street", Category:"Local Experience", Type:"Town Hub", Lat:6.8400, Lon:81.8340, Desc:"Restaurants and cafes", imgSrc: "https://www.arugam.info/wp-content/uploads/arugam-bay-bridge.jpg"},
+      {Name:"Pottuvil Local Market", Category:"Local Experience", Type:"Market", Lat:6.8680, Lon:81.8230, Desc:"Fresh produce market", imgSrc:"https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Urani Village", Category:"Local Experience", Type:"Village Tour", Lat:6.8650, Lon:81.7920, Desc:"Local life experience", imgSrc: "https://www.arugambayagenda.com/wp-content/uploads/2025/10/6-scaled.jpeg"},
+      {Name:"Aliya Hippie Market", Category:"Local Experience", Type:"Market", Lat:6.8380, Lon:81.8330, Desc:"Seasonal craft market", imgSrc: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQ2uaGdaFSz77reBJMhLulGdnCP7j9mhhpOw&s"},
+      {Name:"Arugam Bay Surf Schools", Category:"Local Experience", Type:"Surf School Zone", Lat:6.8405, Lon:81.8345, Desc:"Surf lesson area", imgSrc: "https://scontent.fcmb1-2.fna.fbcdn.net/v/t51.75761-15/504462894_18490154293064773_6820667596338859088_n.webp?stp=dst-jpg_s960x960_tt6&_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=7z4fAkkqD5QQ7kNvwG8q_Zg&_nc_oc=AdkPE3nQ9ifE1kouIzlbEhXnEHJ43bB8JMP-jioEamk6SPD4Pfh7s2GDam-gUq9dgsM&_nc_zt=23&_nc_ht=scontent.fcmb1-2.fna&_nc_gid=hb9QYOaqWhG7UOSer-ra-w&oh=00_AfmWvfbB1ers10-yUINcoQIAgpjtlE4FKSalXvdWJ0gmFQ&oe=69402556"},
+      {Name:"Komari Village", Category:"Local Experience", Type:"Village", Lat:6.9700, Lon:81.7800, Desc:"Coastal settlement", imgSrc: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/479560646.jpg?k=a605182c3a9fca0fb0254249ae6fd02380664234039d14d814f76796a3505e6b&o="},
+      {Name:"Ullai Village", Category:"Local Experience", Type:"Village", Lat:6.8500, Lon:81.8100, Desc:"Beachside village", imgSrc: "https://evendo-location-media.s3.amazonaws.com/RestaurantImages/07e57c9c-cc6d-423a-87ca-97b717c7d322"},
+      {Name:"Body and Soul Wellness", Category:"Local Experience", Type:"Yoga Center", Lat:6.8385, Lon:81.8342, Desc:"Famous wellness spot", imgSrc:"https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Yoga Class Spot", Category:"Local Experience", Type:"Yoga", Lat:6.8390, Lon:81.8348, Desc:"Yoga activity place", imgSrc: "https://images.squarespace-cdn.com/content/v1/63e2933caa967f0a013b51ac/2bc5ed58-874b-42dd-8596-6b6c10d0cdd5/IMG_5845.JPG?format=1000w"},
+      {Name:"Surf Lesson Baby Point", Category:"Local Experience", Type:"Surfing", Lat:6.8413, Lon:81.8327, Desc:"Learning surf area", imgSrc: "https://cdn.getyourguide.com/image/format=auto,fit=contain,gravity=center,quality=60,width=1440,height=650,dpr=1/tour_img/d645fa91655e999b.png"},
+      {Name:"Mother's Kitchen", Category:"Local Experience", Type:"Restaurant", Lat:6.8402, Lon:81.8343, Desc:"Popular local food", imgSrc: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/23/c8/de/80/mother-s-kitchen-arugamby.jpg?w=1000&h=600&s=1"},
+      {Name:"Paddy Field Tuk Tuk Tour Start", Category:"Local Experience", Type:"Tour Start", Lat:6.8700, Lon:81.8100, Desc:"Paddy field ride start", imgSrc:"https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Beach Bar Live Music Spot", Category:"Local Experience", Type:"Nightlife", Lat:6.8392, Lon:81.8352, Desc:"Live music bar zone", imgSrc:"https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Batik Handloom Workshop", Category:"Local Experience", Type:"Craft", Lat:6.8705, Lon:81.8225, Desc:"Handicraft spot", imgSrc:"https://images.unsplash.com/photo-1563089145-599997674d42?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Hopper Man Restaurant", Category:"Local Experience", Type:"Food Spot", Lat:6.8404, Lon:81.8344, Desc:"Popular hopper place", imgSrc: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1b/86/92/bc/rella-exterior.jpg?w=1000&h=-1&s=1"},
+      {Name:"King Coconut Spot", Category:"Local Experience", Type:"Drink Spot", Lat:6.8406, Lon:81.8351, Desc:"Coconut vendor area", imgSrc:"https://images.unsplash.com/photo-1516684732162-798a0062be99?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Arugam Bay Pool Day Spot", Category:"Local Experience", Type:"Leisure", Lat:6.8388, Lon:81.8341, Desc:"Swimming pool hangout", imgSrc:"https://images.unsplash.com/photo-1575429198097-0414ec08e8cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"},
+      {Name:"Ullai Bicycle Hire Area", Category:"Local Experience", Type:"Transport", Lat:6.8505, Lon:81.8105, Desc:"Bicycle rental area", imgSrc: "http://www.samagivillasafari.com/images/rentalbike07.jpg"},
+      {Name:"Pottuvil Bus Stand", Category:"Infrastructure", Type:"Bus Stand", Lat:6.8685, Lon:81.8245, Desc:"Main transport hub", imgSrc: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhFXrkW3HwBg-6y6ugBTruOnmUk715PqTWiphLlw-YwjquxcLZYF674rvCKDmlKwPx2-KU2ezQbJea8iHBZpszUQvAo3sObYoushRkSCvPFotAN1Isd1RidoFRrdDuR5MeOl7G-EObF88E/s320/pottuvil_bus_stand.jpg"},
+      {Name:"Pottuvil Post Office", Category:"Infrastructure", Type:"Post Office", Lat:6.8675, Lon:81.8250, Desc:"Postal service", imgSrc: "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSzeKWdIxIXXeSoVwkJQeEG40mdkWK6c39_NG2UT5Y-Zt1BIR0XkBOa5vw4vacg8axr3tK1Tq11EgGKufUeYNENP72C95xT0_6PuuLfQOjZyF_o5k_Y46ipjwcRWQrKXvVMuu6hu=w506-h240-k-no"},
+      // duplicates intentionally included previously — dedupe handled below
+    ];
+
+    // ============================================
+    // MAP + UI SETUP
+    // ============================================
+    var map = L.map('map').setView([6.87, 81.82], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Colors for categories (add or adjust as needed)
+    var iconColors = {
+      'Beach & Surf': '#007ac2',
+      'Beach': '#0096c7',
+      'Heritage': '#28a745',
+      'Nature & Wildlife': '#20c997',
+      'Local Experience': '#fd7e14',
+      'Viewpoint': '#6f42c1',
+      'Waterbody': '#17a2b8',
+      'Wildlife': '#17a589',
+      'Infrastructure': '#6c757d',
+      'Nature': '#20c997',
+      'Experience': '#e83e8c'
+    };
+
+    // Build unique categories (respecting what exists in data)
+    var categories = [...new Set(touristPlaces.map(p => p.Category))].sort();
+
+    // Create a layer group per category
+    var categoryLayers = {};
+    categories.forEach(function(cat) {
+      categoryLayers[cat] = L.layerGroup().addTo(map);
+    });
+
+    // Add an "All" option in UI
+    var filterControls = document.getElementById('filterControls');
+    var allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn active';
+    allBtn.setAttribute('data-category', 'All');
+    allBtn.innerHTML = `<i class="fas fa-eye"></i> All`;
+    filterControls.appendChild(allBtn);
+    allBtn.addEventListener('click', function() {
+      // toggle all: if turning off, remove all layers; if turning on, add all visible layers
+      this.classList.toggle('active');
+      var isActive = this.classList.contains('active');
+      // sync other buttons to same state
+      filterControls.querySelectorAll('.filter-btn').forEach(function(b) {
+        if (b !== allBtn) {
+          if (isActive && !b.classList.contains('active')) {
+            b.classList.add('active');
+            map.addLayer(categoryLayers[b.getAttribute('data-category')]);
+          } else if (!isActive && b.classList.contains('active')) {
+            b.classList.remove('active');
+            map.removeLayer(categoryLayers[b.getAttribute('data-category')]);
+          }
+        }
+      });
+      // if turning on All, ensure all category layers exist on map
+      if (isActive) {
+        categories.forEach(function(cat){ if (!map.hasLayer(categoryLayers[cat])) map.addLayer(categoryLayers[cat]); });
+      } else {
+        categories.forEach(function(cat){ if (map.hasLayer(categoryLayers[cat])) map.removeLayer(categoryLayers[cat]); });
+      }
+    });
+
+    // Create buttons for each category
+    categories.forEach(function(cat) {
+      var btn = document.createElement('button');
+      btn.className = 'filter-btn active';
+      btn.setAttribute('data-category', cat);
+      btn.innerHTML = `<i class="fas fa-layer-group"></i> ${cat}`;
+      filterControls.appendChild(btn);
+
+      btn.addEventListener('click', function() {
+        this.classList.toggle('active');
+        // keep "All" button state synchronized: if any category is off, All should be off
+        var anyOff = Array.from(filterControls.querySelectorAll('.filter-btn')).some(function(b){
+          return b !== allBtn && !b.classList.contains('active');
+        });
+        if (anyOff) allBtn.classList.remove('active'); else allBtn.classList.add('active');
+
+        var catName = this.getAttribute('data-category');
+        if (this.classList.contains('active')) {
+          map.addLayer(categoryLayers[catName]);
+        } else {
+          map.removeLayer(categoryLayers[catName]);
+        }
+      });
+    });
+
+    // Dedupe by Name and then add markers + cards for every place
+    var highlightsGrid = document.getElementById('highlightsGrid');
+    var seenNames = new Set();
+    var bounds = L.latLngBounds(); // to fit map to all markers
+
+    touristPlaces.forEach(function(place, index) {
+      if (!place || !place.Name) return;
+      if (seenNames.has(place.Name)) {
+        // skip duplicates by name
+        return;
+      }
+      seenNames.add(place.Name);
+
+      // Create Map Marker (circle marker for consistent style)
+      var marker = L.circleMarker([place.Lat, place.Lon], {
+        radius: 8,
+        fillColor: iconColors[place.Category] || '#6c757d',
+        color: '#ffffff',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.95
+      });
+
+      // Build popup content with clickable image that opens modal
+      var popupContent = document.createElement('div');
+      popupContent.style.minWidth = '260px';
+      var h4 = document.createElement('h4');
+      h4.style.margin = '0 0 8px';
+      h4.style.color = iconColors[place.Category] || '#000';
+      h4.textContent = place.Name;
+      var img = document.createElement('img');
+      img.src = place.imgSrc;
+      img.alt = place.Name;
+      img.style.width = '100%';
+      img.style.height = '140px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '6px';
+      img.style.marginBottom = '10px';
+      img.style.cursor = 'pointer';
+      img.addEventListener('click', function() {
+        openModal(place.imgSrc, place.Name);
+      });
+
+      var pType = document.createElement('p');
+      pType.innerHTML = `<strong>Type:</strong> ${place.Type}`;
+      var pDesc = document.createElement('p');
+      pDesc.textContent = place.Desc;
+      var small = document.createElement('small');
+      small.innerHTML = '<i>Click image for larger view</i>';
+
+      popupContent.appendChild(h4);
+      popupContent.appendChild(img);
+      popupContent.appendChild(pType);
+      popupContent.appendChild(pDesc);
+      popupContent.appendChild(small);
+
+      marker.bindPopup(popupContent);
+
+      marker.addTo(categoryLayers[place.Category]);
+      bounds.extend([place.Lat, place.Lon]);
+
+      // Create Highlight Card for every place (NO LIMIT)
+      var card = document.createElement('div');
+      card.className = 'place-card';
+      card.setAttribute('data-category', place.Category);
+      card.innerHTML = `
+        <div class="card-img-container">
+          <img src="${place.imgSrc}" alt="${place.Name}" class="card-img" loading="lazy">
+        </div>
+        <div class="card-body">
+          <span class="card-tag">${place.Category}</span>
+          <h3>${place.Name}</h3>
+          <p>${place.Desc}</p>
+          <p><small><i class="fas fa-map-marker-alt"></i> ${place.Type}</small></p>
+        </div>
+      `;
+      highlightsGrid.appendChild(card);
+
+      // clicking card centers map and opens popup
+      card.addEventListener('click', function() {
+        map.setView([place.Lat, place.Lon], 15, {animate: true});
+        marker.openPopup();
+      });
+
+      // clicking the image opens modal
+      card.querySelector('.card-img').addEventListener('click', function(e) {
+        e.stopPropagation();
+        openModal(place.imgSrc, place.Name);
+      });
+    });
+
+    // Fit map to include all markers (with small padding). If bounds aren't valid, keep default view.
+    if (bounds.isValid()) {
+      map.fitBounds(bounds.pad(0.12));
+    }
+
+    // Smooth scroll for navigation
+    document.querySelectorAll('.main-nav a, .hero .btn').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        var href = this.getAttribute('href');
+        if (!href || !href.startsWith('#')) return;
+        e.preventDefault();
+        const targetElement = document.querySelector(href);
+        if(targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+          document.getElementById('mainNav').classList.remove('show');
+        }
+      });
+    });
+
+    // Modal functions
+    var imgModal = document.getElementById('imgModal');
+    var modalImg = document.getElementById('modalImg');
+    var modalClose = document.getElementById('modalClose');
+
+    function openModal(src, alt) {
+      modalImg.src = src;
+      modalImg.alt = alt || 'Image';
+      imgModal.classList.add('show');
+      imgModal.setAttribute('aria-hidden', 'false');
+    }
+    function closeModal() {
+      imgModal.classList.remove('show');
+      imgModal.setAttribute('aria-hidden', 'true');
+      modalImg.src = '';
+    }
+    modalClose.addEventListener('click', closeModal);
+    imgModal.addEventListener('click', function(e) {
+      if (e.target === imgModal) closeModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Make filter controls also filter highlight cards visually (optional UX improvement)
+    filterControls.addEventListener('click', function() {
+      // get active categories (excluding All)
+      var activeCats = Array.from(filterControls.querySelectorAll('.filter-btn'))
+        .filter(b => b !== allBtn && b.classList.contains('active'))
+        .map(b => b.getAttribute('data-category'));
+      // if all categories active or none selected, show all cards
+      if (activeCats.length === 0 || activeCats.length === categories.length) {
+        document.querySelectorAll('.place-card').forEach(function(c) { c.style.display = ''; });
+      } else {
+        document.querySelectorAll('.place-card').forEach(function(c) {
+          var cat = c.getAttribute('data-category');
+          if (activeCats.indexOf(cat) !== -1) c.style.display = '';
+          else c.style.display = 'none';
+        });
+      }
+    });
+
+  </script>
+
+
+<script>
+  document.getElementById("currentYear").textContent = new Date().getFullYear();
+</script>
+
+
+</body>
+</html>
